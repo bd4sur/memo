@@ -1,0 +1,570 @@
+// Mikumark V3.0
+// Markdown Parser
+// 2019.10 Refactored in TypeScript
+// 2022.01 Refactored in JavaScript
+// Arch:
+// MD → [Parser] → MarkdownDocument object(HTML included) → [Painter] → Web page
+// Document:
+/*
+#!title: 标题
+#!content
+此处为正文
+*/
+
+// Markdown解析
+// 输入：MD多行文本
+// 输出：
+// {
+//     "html": HTML代码,
+//     "outline": [{}, ...] 文章目录
+// };
+function ParseMarkdown(markdown) {
+
+    let OUTLINE = [];
+    let TITLE_COUNT = 0;
+
+    // 元字符常量
+    const C_STAR = '@STAR@'; // *
+    const C_WAVE = "@WAVE@"; // ~
+    const C_REVQ = "@REVQ@"; // `
+    const C_LSQB = "@LSQB@"; // [
+    const C_RSQB = "@RSQB@"; // ]
+    const C_LRDB = "@LRDB@"; // (
+    const C_RRDB = "@RRDB@"; // )
+    const C_DOLR = "@DOLR@"; // $
+    const C_VERT = "@VERT@"; // |
+    const C_PLUS = "@PLUS@"; // +
+    const C_MNUS = "@MNUS@"; // -
+    const C_BSLT = "@BSLT@"; // \
+    const C_SHRP = "@SHRP@"; // #
+    const C_AMPS = "@AMPS@"; // &
+    const C_PCNT = "@PCNT@"; // %
+
+    // 元字符转义
+    function EscapeMetachar(str) {
+        return str
+        .replace(/\\\*/g, C_STAR).replace(/\\\~/g, C_WAVE).replace(/\\\`/g, C_REVQ)
+        .replace(/\\\[/g, C_LSQB).replace(/\\\]/g, C_RSQB).replace(/\\\(/g, C_LRDB)
+        .replace(/\\\)/g, C_RRDB).replace(/\\\$/g, C_DOLR).replace(/\\\|/g, C_VERT)
+        .replace(/\\\+/g, C_PLUS).replace(/\\\\/g, C_BSLT).replace(/\\\#/g, C_SHRP)
+        .replace(/\\\-/g, C_MNUS).replace(/\\\&/g, C_AMPS).replace(/\\\%/g, C_PCNT);
+    }
+
+    // 元字符覆盖
+    function CoverMetachar(str) {
+        return str
+        .replace(/\*/g, C_STAR).replace(/\~/g, C_WAVE).replace(/\`/g, C_REVQ)
+        .replace(/\[/g, C_LSQB).replace(/\]/g, C_RSQB).replace(/\(/g, C_LRDB)
+        .replace(/\)/g, C_RRDB).replace(/\$/g, C_DOLR).replace(/\|/g, C_VERT)
+        .replace(/\+/g, C_PLUS).replace(/\\/g, C_BSLT).replace(/\#/g, C_SHRP)
+        .replace(/\-/g, C_MNUS).replace(/\&/g, C_AMPS).replace(/\%/g, C_PCNT);
+    }
+
+    // 元字符换回
+    function RecoverMetachar(str) {
+        return str
+        .replace(new RegExp(C_STAR,'g'), '*').replace(new RegExp(C_WAVE,'g'), '~').replace(new RegExp(C_REVQ,'g'), '`')
+        .replace(new RegExp(C_LSQB,'g'), '[').replace(new RegExp(C_RSQB,'g'), ']').replace(new RegExp(C_LRDB,'g'), '(')
+        .replace(new RegExp(C_RRDB,'g'), ')').replace(new RegExp(C_DOLR,'g'), '$').replace(new RegExp(C_VERT,'g'), '|')
+        .replace(new RegExp(C_PLUS,'g'), '+').replace(new RegExp(C_BSLT,'g'), '\\').replace(new RegExp(C_SHRP,'g'), '#')
+        .replace(new RegExp(C_MNUS,'g'), '-').replace(new RegExp(C_AMPS,'g'), '&').replace(new RegExp(C_PCNT,'g'), '%');
+    }
+
+    // 覆盖HTML元字符
+    function CoverHTMLchar(str) {
+        return str.replace(/>/gi, "&gt;").replace(/</gi, "&lt;").replace(/&/gi, "&amp;");
+    }
+
+    // 换回HTML元字符
+    function RecoverHTMLchar(str) {
+        return str.replace(/&gt;/gi, ">").replace(/&lt;/gi, "<").replace(/&amp;/gi, "&");
+    }
+
+
+    // 段内样式解析
+    function ParseInline(mdInline) {
+        let RegexInlineCode = /\`(.+?)\`/g;
+        let RegexTag = /\#\((.+?)\)\#/g;
+        let RegexBold = /\*\*(.+?)\*\*/g;
+        let RegexItalic = /%%(.+?)%%/g;
+        let RegexDeleted = /~(.+?)~/g;
+        let RegexColor = /\[\[(#?[a-zA-Z0-9]+?)\:(.+?)#\]\]/g;
+        let RegexSelfLink = /\[(.+?)\]\(\)/g;
+        let RegexLink = /\[(.+?)\]\((.+?)\)/g;
+
+        // 首先处理换行
+        let HTML = mdInline.replace(/[\n\r]/g, "<br/>");
+
+        // 行内代码：需要特殊处理，其内的所有元字符都应被转义，防止解析成HTML标签。（不会处理已屏蔽的元字符）
+        let inlineCodeSegments = RegexInlineCode.exec(HTML);
+        while(inlineCodeSegments !== null) {
+            let rhs = inlineCodeSegments[1];
+            HTML = HTML.replace(inlineCodeSegments[0],
+                `<code class="MikumarkCode"><script type="text/html" style="display: inline;">${rhs}</script></code>`);
+            // HTML = HTML.replace(inlineCodeSegments[0],
+            //     `<code class="MikumarkCode">${CoverHTMLchar(CoverMetachar(inlineCodeSegments[1]))}</code>`);
+            inlineCodeSegments = RegexInlineCode.exec(HTML);
+        }
+
+        HTML = EscapeMetachar(HTML);
+
+        HTML = HTML .replace(RegexTag, `<span class="MikumarkTag">$1</span>`)
+                    .replace(RegexBold, `<b>$1</b>`)
+                    .replace(RegexItalic, `<i>$1</i>`)
+                    .replace(RegexDeleted, `<del>$1</del>`)
+                    .replace(RegexColor, `<span style="color:$1;">$2</span>`)
+                    .replace(RegexSelfLink, `<a target="_blank" href="$1">$1</a>`)
+                    .replace(RegexLink, `<a target="_blank" href="$2">$1</a>`)
+                    ;
+
+        // return RecoverHTMLchar(RecoverMetachar(HTML));
+        return RecoverMetachar(HTML);
+    }
+
+
+    // 段落级样式解析
+    function ParseParagraph(mdParagraph) {
+        if(mdParagraph.length <= 0) return "";
+
+        let HtmlBuffer = new Array();
+
+        mdParagraph = mdParagraph.trim();
+
+        // 标题
+        if(/^#+?(?![\!\(]).+/g.test(mdParagraph) === true) {
+            let level = (mdParagraph.match(/^#+(?=[^#])/i)[0]).length;
+            let title = mdParagraph.replace(/^#+/g, "").trim();
+            HtmlBuffer.push(`<h${level} id="Title_${TITLE_COUNT}">${title}</h${level}>`);
+            // 目录
+            OUTLINE[TITLE_COUNT] = {
+                level: level,
+                title: title
+            };
+            TITLE_COUNT++;
+        }
+        // 分割线（至少3个连续dash的单行段落）
+        else if(/^\-{3,}$/g.test(mdParagraph) === true) {
+            HtmlBuffer.push(`<hr/>`);
+        }
+        // 有序列表（+号开头的段落）
+        else if(/^\++[\s\S]+/g.test(mdParagraph) === true) {
+            // 按行分割列表项
+            let lines = mdParagraph.split("\n");
+            // 层级计数器
+            let currentLevel = 0;
+            for(let i = 0; i < lines.length; i++) {
+                let line = lines[i];
+                // 计算+号数量（列表层级）
+                let prefix = line.match(/^\++(?=[^\+])/i);
+                if(prefix == null) {
+                    HtmlBuffer.push(mdParagraph);
+                    break;
+                }
+                let level = prefix[0].length;
+                // 列表文本
+                let item = line.replace(/^\++/g, "").trim();
+                // 判断层级是否改变
+                if(level > currentLevel) { // 嵌套加深
+                    for(let c = 0; c < (level - currentLevel); c++) {
+                        HtmlBuffer.push(`<ol>`);
+                    }
+                    HtmlBuffer.push(`<li>`);
+                    HtmlBuffer.push(ParseInline(item));
+                    currentLevel = level;
+                }
+                else if(level < currentLevel){ // 嵌套退出
+                    for(let c = 0; c < (currentLevel - level); c++) {
+                        HtmlBuffer.push(`</li></ol>`);
+                    }
+                    HtmlBuffer.push(`</li><li>`);
+                    HtmlBuffer.push(ParseInline(item));
+                    currentLevel = level;
+                }
+                else { // 保持同级
+                    HtmlBuffer.push(`</li><li>`);
+                    HtmlBuffer.push(ParseInline(item));
+                    currentLevel = level;
+                }
+            }
+            // 闭合列表标签
+            for(let c = 0; c < currentLevel; c++) {
+                HtmlBuffer.push(`</li></ol>`);
+            }
+        }
+        // 无序列表（-号开头的段落）
+        else if(/^\-+[\s\S]+/g.test(mdParagraph) === true) {
+            // 按行分割列表项
+            let lines = mdParagraph.split("\n");
+            // 层级计数器
+            let currentLevel = 0;
+            for(let i = 0; i < lines.length; i++) {
+                let line = lines[i];
+                // 计算-号数量（列表层级）
+                let prefix = line.match(/^\-+(?=[^\-])/i);
+                if(prefix == null) {
+                    HtmlBuffer.push(mdParagraph);
+                    break;
+                }
+                let level = prefix[0].length;
+                // 列表文本
+                let item = line.replace(/^\-+/g, "").trim();
+                // 判断层级是否改变
+                if(level > currentLevel) { // 嵌套加深
+                    for(let c = 0; c < (level - currentLevel); c++) {
+                        HtmlBuffer.push(`<ul>`);
+                    }
+                    HtmlBuffer.push(`<li>`);
+                    HtmlBuffer.push(ParseInline(item));
+                    currentLevel = level;
+                }
+                else if(level < currentLevel){ // 嵌套退出
+                    for(let c = 0; c < (currentLevel - level); c++) {
+                        HtmlBuffer.push(`</li></ul>`);
+                    }
+                    HtmlBuffer.push(`</li><li>`);
+                    HtmlBuffer.push(ParseInline(item));
+                    currentLevel = level;
+                }
+                else { // 保持同级
+                    HtmlBuffer.push(`</li><li>`);
+                    HtmlBuffer.push(ParseInline(item));
+                    currentLevel = level;
+                }
+            }
+            // 闭合列表标签
+            for(let c = 0; c < currentLevel; c++) {
+                HtmlBuffer.push(`</li></ul>`);
+            }
+        }
+        // 表格
+        else if(/^\|[\s\S]+\|$/g.test(mdParagraph) === true) {
+            // 按行分割
+            let rows = mdParagraph.split("\n");
+            // 分割线标识
+            let hasHeadline = false;
+            // 对齐方式：下标为列序号（从1开始）
+            let alignType = new Array();
+            HtmlBuffer.push('<div class="MikumarkTableContainer"><table>');
+
+            for(let i = 0; i < rows.length; i++) {
+                let row = rows[i];
+                let cols = row.split("|");
+                if(cols.length <= 2) {
+                    console.log("Syntax error."); return;
+                }
+                if(cols.length == 3 && /\-{3,}/i.test(cols[1])==true) {
+                    hasHeadline = true;
+                }
+                else {
+                    HtmlBuffer.push('<tr>');
+                    if(hasHeadline == true) { // TD表格主体
+                        for(let c = 1; c < cols.length - 1; c++) {
+                            HtmlBuffer.push(`<td${( alignType[c] ? alignType[c] : '' )}>${ParseInline(cols[c])}</td>`);
+                        }
+                    }
+                    else { // TH表头
+                        for(let c = 1; c < cols.length - 1; c++) {
+                            // 记录对齐方式
+                            if(/^\:.*\:$/gi.test(cols[c])) {
+                                alignType[c] = ` style="text-align:center;"`;
+                            }
+                            else if(/\:$/gi.test(cols[c])) {
+                                alignType[c] = ` style="text-align:right;"`;
+                            }
+                            else if(/^\:/gi.test(cols[c])) {
+                                alignType[c] = ` style="text-align:left;"`;
+                            }
+                            else {
+                                alignType[c] = '';
+                            }
+                            cols[c] = cols[c].replace(/\:$/gi, '').replace(/^\:/gi, '');
+                            HtmlBuffer.push(`<th${( alignType[c] ? alignType[c] : '' )}>${ParseInline(cols[c])}</th>`);
+                        }
+                    }
+                    HtmlBuffer.push('</tr>');
+                }
+            }
+            HtmlBuffer.push('</table></div>');
+        }
+        // 图片
+        else if(/^\!\[.+?\]\(.+?\)$/g.test(mdParagraph) === true) {
+            let imgTitle = mdParagraph.match(/^\!\[.+\]\(/g)[0];
+            imgTitle = imgTitle.substring(2, imgTitle.length - 2);
+            let imgURL = mdParagraph.match(/\]\([^(\]\()]+\)$/g)[0];
+            imgURL = imgURL.substring(2, imgURL.length - 1);
+            HtmlBuffer.push(`<div class="MikumarkImageContainer"><img class="MikumarkImage" src="${imgURL}"><div class="MikumarkImageTitle">${ParseInline(imgTitle)}</div></div>`);
+        }
+        // 居中的段落
+        else if(/^\:.+/g.test(mdParagraph) === true) {
+            let content = mdParagraph.substring(1).trim(); // 截取:号后面的内容
+            HtmlBuffer.push(`<p style="text-align:center;">${ParseInline(content)}</p>`);
+        }
+        // LaTeX公式段落
+        else if(/^\$\$.+?\$\$$/g.test(mdParagraph) === true) {
+            HtmlBuffer.push(`<p>${mdParagraph}</p>`);
+        }
+        // 单个HTML元素，直接原样返回
+        else if(/^<.+?[\s\S]*>$/g.test(mdParagraph) === true) {
+            HtmlBuffer.push(mdParagraph);
+        }
+        // 普通段落
+        else {
+            HtmlBuffer.push(`<p>${ParseInline(mdParagraph)}</p>`);
+        }
+
+        return HtmlBuffer.join("");
+    }
+
+
+    // 跨段落样式解析
+    function ParseInterPara(md) {
+        let HtmlBuffer = new Array();
+
+        // 首先处理代码块
+        let codeBlocks = new Array();
+
+        let mdBuffer = new Array();
+
+        let codeIndex = 0;
+        let codeLanguage = "";
+        let codeBlockBuffer = new Array();
+
+        let lines = md.split("\n");
+        let isInCodeBlock = false;
+        let codeBlockQuoteLevel = 0;
+        for(let i = 0; i < lines.length; i++) {
+            let line = lines[i];
+            if(/^(>*)\s*```/g.test(line) === true) { // 支持在块引用中的代码块
+                // 进入代码块
+                if(isInCodeBlock === false) {
+                    codeBlockQuoteLevel = (line.match(/^>*(?=[^>])/i)[0]).length;
+                    codeLanguage = line.replace(/^(>*)\s*```:?/gi, "").toLowerCase();
+                    isInCodeBlock = true;
+                }
+                // 退出代码块
+                else {
+                    isInCodeBlock = false;
+                    mdBuffer.push(`${">>>>>>>>>>>>>>>>>>>".substring(0, codeBlockQuoteLevel)}\`\`\`${codeIndex}`);
+                    codeBlocks[codeIndex] = {
+                        language: codeLanguage,
+                        code: CoverHTMLchar(codeBlockBuffer.join(""))
+                    };
+                    codeIndex++;
+                    codeLanguage = "";
+                    codeBlockBuffer = new Array();
+                    codeBlockQuoteLevel = 0;
+                }
+            }
+            else {
+                // 处于代码块内部
+                if(isInCodeBlock === true) {
+                    codeBlockBuffer.push(line + "\n");
+                }
+                else {
+                    mdBuffer.push(line);
+                }
+            }
+        }
+
+        md = mdBuffer.join("\n"); // 重新组合起来
+
+        // 自然段落分隔
+        let paragraphs = md.split(/\n{2,}/g);
+
+        // 遍历各个段落，判断段落类型
+        // 引用块计数
+        let quoteFlag = false;
+        let quoteLevel = 0;
+        for(let pcount = 0; pcount < paragraphs.length; pcount++) {
+            let paragraph = paragraphs[pcount];
+
+            // 引用框？
+            if(/^>.+/g.test(paragraph) === true) {
+                quoteFlag = true;
+                // >号数量（引用层级）
+                let level = (paragraph.match(/^>+(?=[^>])/i)[0]).length;
+
+                // 引用文本
+                let quote = paragraph.replace(/^>+/, "").trim();
+
+                // 判断层级是否改变
+                if(level > quoteLevel) { // 嵌套加深
+                    for(let c = 0; c < (level - quoteLevel); c++) {
+                        HtmlBuffer.push(`<blockquote>`);
+                    }
+                }
+                else if(level < quoteLevel){ // 嵌套退出
+                    for(let c = 0; c < (quoteLevel - level); c++) {
+                        HtmlBuffer.push(`</blockquote>`);
+                    }
+                }
+                else {} // 保持同级，不加标签
+
+                // 处理代码块
+                if(/^(>*)\s*```\d+/g.test(quote) === true) {
+                    HtmlBuffer.push(quote);
+                }
+                else {
+                    HtmlBuffer.push(ParseParagraph(quote));
+                }
+                quoteLevel = level;
+            }
+            // 无前缀的段落
+            else {
+                // 闭合引用标签，并退出引用状态
+                if(quoteFlag == true) {
+                    for(let c = 0; c < quoteLevel; c++) {
+                        HtmlBuffer.push(`</blockquote>`);
+                    }
+                    quoteLevel = 0;
+                }
+                quoteFlag = false;
+
+                if(/^```\d+/g.test(paragraph) === true) {
+                    HtmlBuffer.push(paragraph);
+                }
+                else {
+                    HtmlBuffer.push(ParseParagraph(paragraph));
+                }
+            }
+        }
+
+        // 代码写回并高亮
+        for(let i = 0; i < HtmlBuffer.length; i++) {
+            let para = HtmlBuffer[i];
+            if(/^(>*)\s*```/g.test(para) === true) {
+                let index = parseInt(para.trim().replace(/^(>*)\s*```/g, ""));
+                let codeBlock = codeBlocks[index];
+                let code = RecoverMetachar(RecoverHTMLchar(codeBlock.code));
+                HtmlBuffer[i] = `<pre><code>${code}</code></pre>`;
+            }
+        }
+
+        return HtmlBuffer.join("");
+    }
+
+    // 函数入口
+
+    return {
+        "html": ParseInterPara(markdown),
+        "outline": OUTLINE
+    };
+
+}
+
+// 文章解析
+// 仅保留必要字段
+function ParseArticle(article) {
+    let contentBuffer = new Array();
+    let title = "";
+    let date = "";
+
+    let state = "content";
+
+    let lines = article.split("\n");
+    for(let i = 0; i < lines.length; i++) {
+        let line = lines[i];
+        if(/^#!title:/g.test(line) === true) {
+            title = line.replace(/^#!title:/g, "").trim();
+        }
+        else if(/^#!date:/g.test(line) === true) {
+            date = line.replace(/^#!date:/g, "").trim();
+        }
+        else if(/^#!content$/.test(line) === true) { state = "content"; }
+        else if(state === "content") { contentBuffer.push(line); }
+    }
+
+    let mdContent = contentBuffer.join("\n");
+
+    let md = ParseMarkdown(mdContent);
+
+    return  {
+        "html": md.html,
+        "outline": md.outline,
+        "title": title,
+        "date": date
+    };
+}
+
+
+
+
+
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+// 渲染文章目录，并为每个按钮注册点击跳转事件
+function RenderTOC(outline) {
+    let HtmlBuffer = new Array();
+    HtmlBuffer.push(`<ul class="ContentsList">`);
+
+    // 保证标签匹配的栈
+    let stack = new Array();
+    stack.push('{'); // 已经有一个ul了
+
+    for(let i = 0; i < outline.length; i++) {
+        let thisLevel = outline[i].level + 1;
+        let nextLevel = (outline[i+1] === undefined) ? 2 : (outline[i+1].level + 1)
+        let thisTitle = outline[i].title;
+        // 缩进
+        if(thisLevel < nextLevel) {
+            HtmlBuffer.push(`<li><span data-title-id="${i}" id="ContentsItem_${i}" class="ContentsItem">${thisTitle}</span>`);
+            stack.push('(');
+            for(let c = 0; c < nextLevel - thisLevel; c++) {
+                HtmlBuffer.push(`<ul class="ContentsListItem">`);
+                stack.push('{');
+            }
+        }
+        // 退出缩进
+        else if(thisLevel > nextLevel) {
+            HtmlBuffer.push(`<li><span data-title-id="${i}" id="ContentsItem_${i}" class="ContentsItem">${thisTitle}</span>`);
+            stack.push('(');
+            let count = thisLevel - nextLevel;
+            while(count >= 0) {
+                if(stack[stack.length-1] === '(') {
+                    stack.pop();
+                    HtmlBuffer.push(`</li>`);
+                }
+                else if(stack[stack.length-1] === '{') {
+                    if(count > 0) {
+                        stack.pop();
+                        HtmlBuffer.push(`</ul>`);
+                    }
+                    count--;
+                }
+            }
+        }
+        // 平级
+        else {
+            HtmlBuffer.push(`<li><span data-title-id="${i}" id="ContentsItem_${i}" class="ContentsItem">${thisTitle}</span></li>`);
+        }
+    }
+    HtmlBuffer.push('</ul>');
+
+    $("#ContentsContainer").html(HtmlBuffer.join(""));
+
+    // 注册目录标题的点击跳转事件
+    // 跳转到某个标题
+    function TurnTo(titleID) {
+        let targetTop = window.pageYOffset + $(`#Title_${titleID}`)[0].getBoundingClientRect().top;
+        $('html, body').animate({ scrollTop: targetTop-40 }, 200, 'easeOutExpo', () => {
+            $(window).scroll(); // 保证触发目录刷新
+        }); // 照顾顶部sticky导航栏的40px高度
+    }
+    $(".ContentsItem").each((i, e) => {
+        $(e).click((event) => {
+            let posterId = $(e).attr("data-title-id");
+            TurnTo(posterId);
+            event.stopPropagation(); // 阻止冒泡
+        });
+    });
+}
