@@ -101,7 +101,7 @@ markdown { display: none; }
     .TocTitle { font-size: 14px; line-height: 1; font-weight: bold; color: #233; margin: 0 0 10px 0; letter-spacing: 2px;}
     .ContentsContainer { color: #233; font-size: 13px; line-height: 1.6; }
     .ContentsList { padding-left: 1em; margin: 0; }
-    .ContentsListItem { padding-left: 1em; list-style-type: circle; display: none; } /* 二级及以下的目录不显示 */
+    .ContentsListItem { padding-left: 1em; list-style-type: circle; display: none; } /* 二级及以下的目录 */
     .ContentsItem { cursor: pointer; }
     .ContentsItem:hover { text-decoration: underline; }
     .ContentsItemActive { color: #18e; }
@@ -563,12 +563,17 @@ markdown { display: none; }
 
 .Mikumark .MikumarkTag {
     font-size: calc(var(--p_font_size) - 1px);
-    color: #0099e6;
-    /* font-weight: bold; */
-    padding: 0 5px;
-    background-color: #e4f6ff;
-    border-radius: 100px;
+    border-radius: 3px;
+    padding: 1px 6px;
+    margin: 0px 2px;
+    text-align: center;
 }
+.Mikumark .MikumarkTag-Green  { color: #117733; background-color: #e6f4ea; }
+.Mikumark .MikumarkTag-Yellow { color: #b05a00; background-color: #f5f7e0; }
+.Mikumark .MikumarkTag-Red    { color: #d00033; background-color: #ffeef0; }
+.Mikumark .MikumarkTag-Violet { color: #880099; background-color: #fcecfc; }
+.Mikumark .MikumarkTag-Blue   { color: #0033cc; background-color: #e8f0fe; }
+.Mikumark .MikumarkTag-Grey   { color: #333334; background-color: #eeeeef; }
 
 /********** 水平线样式 **********/
 
@@ -634,6 +639,38 @@ markdown { display: none; }
     font-weight: bold;
     line-height: var(--p_line_height);
     cursor: pointer;
+}
+
+/********** 标签页样式 **********/
+
+.Mikumark .MikumarkTab {
+    box-shadow: 0 1px 2px 0 rgb(60 64 67 / 30%), 0 1px 3px 1px rgb(60 64 67 / 15%);
+    border-radius: 5px;
+    margin: var(--p_margin_bottom) 0;
+}
+.Mikumark .MikumarkTabButton {
+    display: inline-block;
+    box-sizing: border-box;
+    font-size: var(--p_font_size);
+    border-bottom: 2px solid transparent;
+    padding: 1px 10px;
+    height: 30px;
+    line-height: 28px;
+    cursor: pointer;
+}
+.Mikumark .MikumarkTabButton:hover {
+    font-weight: bold;
+}
+.Mikumark .MikumarkTabActive {
+    font-weight: bold;
+    border-bottom: 2px solid #18e;
+}
+.Mikumark .MikumarkTabButtonContainer {
+    text-align: center;
+    border-bottom: 1px solid #e0e0e0;
+}
+.Mikumark .MikumarkTabContentContainer {
+    padding: 1px 20px;
 }
 
 /********** 代码高亮样式（暂不用） **********/

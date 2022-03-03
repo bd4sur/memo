@@ -320,16 +320,82 @@ function ParseMarkdown(markdown) {
     function ParseInterPara(md) {
         let HtmlBuffer = new Array();
 
-        // 首先处理代码块
-        let codeBlocks = new Array();
+        // 处理标签页 ///////////////////////////////////
 
         let mdBuffer = new Array();
+
+        let tabIndexes = [];
+        let tabContents = [];
+        let tabCount = -1;
+        let groupTabCountFrom = 0;
+        let groupCount = -1;
+
+        let lines = md.split("\n");
+        let isInTabBlock = false;
+
+        for(let i = 0; i < lines.length; i++) {
+            let line = lines[i];
+            if(/^@@tab$/g.test(line) === true) { // 不支持在块引用中的Tab块
+                // 进入Tab块
+                if(isInTabBlock === false) {
+                    isInTabBlock = true;
+                    groupTabCountFrom = tabCount + 1;
+                    groupCount++;
+                }
+                // 退出Tab块时，将缓存起来的Tab内容写回
+                else {
+                    isInTabBlock = false;
+                    mdBuffer.push(`<div class="MikumarkTab"><div class="MikumarkTabButtonContainer">`);
+                    mdBuffer.push(tabIndexes.slice(groupTabCountFrom).join("\n"));
+                    mdBuffer.push(`</div><div class="MikumarkTabContentContainer">`);
+                    for(let n = groupTabCountFrom; n <= tabCount; n++) {
+                        if(n === groupTabCountFrom) {
+                            mdBuffer.push(`<div class="MikumarkTabContent_${groupCount} MikumarkTab_${groupCount}_${n}">`);
+                        }
+                        else {
+                            mdBuffer.push(`</div><div class="MikumarkTabContent_${groupCount} MikumarkTab_${groupCount}_${n}" style="display: none;">`);
+                        }
+                        let tabContent = tabContents[n];
+                        for(let j = 0; j < tabContent.length; j++) {
+                            mdBuffer.push(tabContent[j]);
+                        }
+                    }
+                    mdBuffer.push(`</div></div></div>`);
+                }
+            }
+            // 标签标题
+            else if(/^@.+/g.test(line) === true) {
+                tabCount++;
+                let isActive = (tabCount === groupTabCountFrom) ? "MikumarkTabActive" : "";
+                let tabTitle = line.substring(1).trim();
+                tabIndexes[tabCount] = `
+<div class="MikumarkTabButton MikumarkTabBtnGroup_${groupCount} MikumarkTabBtn_${tabCount} ${isActive}" onclick="$('.MikumarkTabContent_${groupCount}').hide(0, ()=>{ $('.MikumarkTab_${groupCount}_${tabCount}').show(); $('.MikumarkTabBtnGroup_${groupCount}').removeClass('MikumarkTabActive'); $('.MikumarkTabBtn_${tabCount}').addClass('MikumarkTabActive'); });">${tabTitle}</div>`;
+                tabContents[tabCount] = [];
+            }
+            else {
+                // 处于Tab块内部
+                if(tabCount >= 0 && isInTabBlock === true) {
+                    tabContents[tabCount].push(line);
+                }
+                else {
+                    mdBuffer.push(line);
+                }
+            }
+        }
+
+        md = mdBuffer.join("\n"); // 重新组合起来
+
+        // 处理代码块 ///////////////////////////////////
+
+        let codeBlocks = new Array();
+
+        mdBuffer = new Array();
 
         let codeIndex = 0;
         let codeLanguage = "";
         let codeBlockBuffer = new Array();
 
-        let lines = md.split("\n");
+        lines = md.split("\n");
         let isInCodeBlock = false;
         let codeBlockQuoteLevel = 0;
         for(let i = 0; i < lines.length; i++) {

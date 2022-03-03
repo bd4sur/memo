@@ -46,7 +46,7 @@ function goTop() {
 function showMarkdown(tag) {
     if(tag === undefined || tag.length <= 0) return;
     if($(`markdown[id="${tag}"]`).length === 0) return;
-    let markdown = $(`markdown[id="${tag}"]`).html().replace(/&gt;/gi, ">");
+    let markdown = $(`markdown[id="${tag}"]`).html().replace(/&gt;/gi, ">").replace(/&lt;/gi, "<");
     let mdobj = ParseMarkdown(markdown);
     $(".Article").html(mdobj.html);
     RenderTOC(mdobj.outline);
@@ -67,5 +67,5 @@ $(".NavItem").each((i, e) => {
 
 $(".StickyTitle").click(() => { goTop(); });
 
-showMarkdown("Notes");
+showMarkdown(MARKDOWN_TAGS[0]);
 goTop();
