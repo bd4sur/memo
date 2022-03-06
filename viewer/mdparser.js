@@ -335,7 +335,7 @@ function ParseMarkdown(markdown) {
 
         for(let i = 0; i < lines.length; i++) {
             let line = lines[i];
-            if(/^@@tab$/g.test(line) === true) { // 不支持在块引用中的Tab块
+            if(/^@@tab(s)?$/g.test(line) === true) { // 不支持在块引用中的Tab块
                 // 进入Tab块
                 if(isInTabBlock === false) {
                     isInTabBlock = true;
