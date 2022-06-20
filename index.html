@@ -1,9 +1,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"><link rel="stylesheet" type="text/css" href="./viewer/markdown.css" charset="utf-8"/><title>BD4SUR Memo</title></head><body>
 
-<markdown id="Misc">
+<markdown id="模板">
 
 # 测试一级标题
-
 
 @@tab
 
@@ -40,6 +39,10 @@
 
 正文段落
 
+------
+
+分割线
+
 ## 滕王阁序
 
 豫章故郡，洪都新府。星分翼轸，地接衡庐。襟三江而带五湖，控蛮荆而引瓯越。物华天宝，龙光射牛斗之墟；人杰地灵，徐孺下陈蕃之榻。雄州雾列，俊采星驰。台隍枕夷夏之交，宾主尽东南之美。都督阎公之雅望，棨戟遥临；宇文新州之懿范，襜帷暂驻。十旬休假，胜友如云；千里逢迎，高朋满座。腾蛟起凤，孟学士之词宗；紫电青霜，王将军之武库。家君作宰，路出名区；童子何知，躬逢胜饯。
@@ -65,14 +68,6 @@
 
 正文段落
 
-# 测试一级标题
-
-正文段落
-
-</markdown>
-
-<markdown id="G1">
-
 # 散文
 
 ## 前赤壁赋
@@ -89,31 +84,20 @@
 
 客喜而笑，洗盏更酌。肴核既尽，杯盘狼籍，相与枕藉乎舟中，不知东方之既白。
 
+
+
+
 </markdown>
 
-<div class="FlexContainer">
-    <div class="LeftAside">
-        <div id="LeftTop"><!--Logo（在main.js中配置）--></div>
-        <div class="Nav" id="Nav"><!--标题内容（自动生成）--></div>
-    </div>
-    <div class="Main">
-        <div class="StickyTitle">Memo</div>
-        <div class="Article Mikumark"><!--正文内容--></div>
-    </div>
-    <div class="RightAside">
-        <div class="TableOfContents">
-            <div class="TocTitle">目录</div>
-            <div class="ContentsContainer" id="ContentsContainer"><span style="color:#c6cbcf;">自动生成</span><!--目录--></div>
-        </div>
-        <div class="Copyright">© 2016-2022 BD4SUR</div>
-    </div>
+<div class="Main">
+    <div class="StickyTitle"><div id="PageTitle"></div><div id="TocToggle">目录</div></div>
+    <div class="TableOfContents"><div class="TocTitle">目录</div><div class="ContentsContainer" id="ContentsContainer"><!--目录--></div></div>
+    <div class="Article Mikumark"><!--正文内容--></div>
 </div>
-
 <script> MathJax = { tex: { inlineMath: [["$", "$"]] } }; </script>
 <script id="MathJax-script" async src="./viewer/mathjax/tex-chtml-full.js"></script>
 <script src="./viewer/jquery.js"></script>
 <script src="./viewer/mdparser.js"></script>
 <script src="./viewer/main.js"></script>
-
 </body>
 </html>

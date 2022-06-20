@@ -5,123 +5,94 @@ body { margin: 0; padding: 0; }
 
 markdown { display: none; }
 
-.FlexContainer {
-    display: flex;
-    align-items: stretch;
-    flex-direction: row;
-    justify-content: center;
-    width: 100%;
+/* 全局变量 */
+@media(min-width:651px){
+    :root {
+        --HeaderHeight: 200px;
+        --MainBorderRadius: 20px;
+        --MainVerticalMargin: 20px;
+        --MainMaxWidth_PC: 800px;
+        --MainWidthPercent_PC: 65%;
+        --NavbarHeight: 40px;
+        --ArticleHorizontalPadding: 50px;
+        --ArticleBottomPadding: 30px;
+    }
+}
+@media(max-width:650px){
+    :root {
+        --HeaderHeight: 150px;
+        --MainBorderRadius: 0px;
+        --MainVerticalMargin: 0px;
+        --NavbarHeight: 40px;
+        --ArticleHorizontalPadding: 15px;
+        --ArticleBottomPadding: 30px;
+    }
 }
 
+.StickyTitle {
+    color: #3a4b5c;
+    position: sticky;
+    top: 0;
+    height: 40px;
+    text-align: center;
+    line-height: 40px;
+    background-color: #fff;
+    border-bottom: 1px solid #e7ecf1;
+    z-index: 99999;
+}
+
+.TableOfContents {
+    display: none;
+    position: sticky;
+    top: 41px;
+    padding: 15px 20px;
+    border-radius: 0 0 10px 10px;
+    border: 1px solid #e7ecf1;
+    border-top: none;
+    background-color: #fff;
+    z-index: 99999;
+}
+.TocTitle { font-size: 14px; line-height: 1; font-weight: bold; color: #233; margin: 0 0 10px 0; letter-spacing: 2px;}
+.ContentsContainer { color: #233; font-size: 13px; line-height: 1.6; }
+.ContentsList { padding-left: 1em; margin: 0; }
+.ContentsListItem { padding-left: 1em; list-style-type: circle; /*display: none;*/ } /* 控制二级及以下的目录是否显示 */
+.ContentsItem { cursor: pointer; }
+.ContentsItem:hover { text-decoration: underline; }
+.ContentsItemActive { color: #18e; }
 
 @media(min-width:651px) { /* PC */
-    .LeftAside  {
-        position: sticky;
-        top: 60px;
-        margin-top: 60px;
-        height: 100%;
-        width: 12%;
-    }
-    .Logo {
-        font-family: 'Times New Roman', Times, serif;
-        font-size: 27px;
-        font-style: italic;
-        line-height: 1;
-        font-weight: bold;
-        text-align: center;
-        width: fit-content;
-        background: linear-gradient(60deg, rgb(184, 53, 255), #29a6ff);
-        color: transparent;
-        background-clip: text;
-        -webkit-background-clip: text;
-    }
-    .Subtitle {
-        color: #789;
-        font-family: 'Times New Roman', Times, serif;
-        font-size: 12px;
-        padding: 4px 0 0 1px;
-    }
-
-    .NavItem {
-        font-size: 15px;
-        line-height: 1.6;
-        padding-left: 15px;
-        margin: 12px 0;
-        cursor: pointer;
-    }
-    .NavItem:hover {
-        font-weight: bold;
-    }
-    .Selected {
-        padding-left: 10px;
-        border-left: 5px solid #18e;
-        font-weight: bold;
-    }
-
-
-
-
     .Main {
-        max-width: 650px;
-        width: 65%;
-        margin: 0;
-        border-left: 1px solid #f3f5f7;
-        border-right: 1px solid #f3f5f7;
-    }
-    .StickyTitle {
-        color: #bcd;
-        position: sticky;
-        top: 0;
-        height: 40px;
-        border-bottom: 1px solid #f3f5f7;
-        text-align: center;
-        line-height: 40px;
-        background-color: #fff;
-        z-index: 99999;
+        max-width: 750px;
+        width: 75%;
+        margin: 0 auto;
     }
     .Article {
         padding: 0 30px;
     }
-
-
-
-
-    .RightAside {
-        position: sticky;
-        top: 60px;
-        height: 100%;
-        width: 16%;
-    }
-    .TableOfContents {
-        margin: 20px;
-        padding: 15px 20px;
-        border-radius: 10px;
-        background: linear-gradient(20deg, #f0f2f5, #f8fcff);
-    }
-    .TocTitle { font-size: 14px; line-height: 1; font-weight: bold; color: #233; margin: 0 0 10px 0; letter-spacing: 2px;}
-    .ContentsContainer { color: #233; font-size: 13px; line-height: 1.6; }
-    .ContentsList { padding-left: 1em; margin: 0; }
-    .ContentsListItem { padding-left: 1em; list-style-type: circle; display: none; } /* 二级及以下的目录 */
-    .ContentsItem { cursor: pointer; }
-    .ContentsItem:hover { text-decoration: underline; }
-    .ContentsItemActive { color: #18e; }
-
-    .Copyright { font-size: 12px; text-align: center; color:#c4c8ca; }
-
-
 }
 @media(max-width:650px) { /* Mobile */
-    .LeftAside  { position: fixed; height: 100%; z-index: 99999;}
-    .RightAside { position: fixed; height: 100%; z-index: 99999;}
     .Main {
         width: 100%;
         margin: 0;
     }
+    .Article {
+        padding: 0 var(--ArticleHorizontalPadding);
+    }
 }
 
 
-
-
+#TocToggle {
+    display: inline-block;
+    font-size: 13px;
+    padding: 0 10px;
+    position: absolute;
+    right: 0; top: 0;
+    color: #8ca1b4;
+}
+#TocToggle:hover {
+    background-color: #f1f5f8;
+    cursor: pointer;
+}
 
 
 
@@ -206,7 +177,7 @@ markdown { display: none; }
         font-size: var(--p_font_size);
         line-height: var(--p_line_height);
         word-wrap: break-word;
-        letter-spacing: 0.3px;
+        /* letter-spacing: 0.3px; */
         /* overflow-x: auto; */
     }
 }
@@ -230,7 +201,8 @@ markdown { display: none; }
     /* 标题样式（可直接改动） */
     .Mikumark h1 {
         color: #18e;
-        background: linear-gradient(90deg, #eff8ff, #fff);
+        border-radius: 100px 0 0 100px;
+        background: linear-gradient(90deg, #1188ee11, #fff);
         left: -30px;
         position: relative;
         padding-left: 30px;
@@ -259,19 +231,21 @@ markdown { display: none; }
         text-rendering: optimizelegibility;
     }
     /* 标题样式（可直接改动） */
-    .Mikumark h1 {font-size:19px;line-height:40px;font-weight:bold;
+    .Mikumark h1 {font-size:16px;line-height:34px;font-weight:bold;
         color: #18e;
-        background: linear-gradient(90deg, #eff8ff, #fff);
-        left: calc(0px - var(--MikumarkHorizontalPadding));
+        background: linear-gradient(90deg, #1188ee11, #fff);
+        left: calc(0px - var(--ArticleHorizontalPadding));
         position: relative;
-        padding-left: var(--MikumarkHorizontalPadding);
+        padding-left: var(--ArticleHorizontalPadding);
     }
-    .Mikumark h2 {font-size:17px;line-height:36px;font-weight:bold;color:var(--p_color);}
-    .Mikumark h2::after {display: block; position: relative; content: ""; height: 2px; width: 100%; top: -5px; background: linear-gradient(90deg, #aaa, #fff); }
-    .Mikumark h3 {font-size:15px;line-height:30px;font-weight:bold;color:var(--p_color);}
-    .Mikumark h4 {font-size:14px;line-height:23px;font-weight:bold;color:var(--p_color);}
-    .Mikumark h5 {font-size:14px;line-height:23px;font-weight:bold;color:var(--p_color);}
-    .Mikumark h6 {font-size:14px;line-height:23px;font-weight:bold;color:var(--p_color);}
+    .Mikumark h2 {font-size:14px;line-height:32px;font-weight:bold;color:var(--p_color); margin-bottom: -10px;}
+    .Mikumark h2::after {display: block; position: relative; content: ""; height: 10px; width: 50%; left: -5px; top: -15px; background: linear-gradient(90deg, #e0f1fd, #fff); z-index: -1; }
+    .Mikumark h2:first-letter {font-size: 16px; vertical-align: baseline;}
+
+    .Mikumark h3 {font-size:13px;line-height:25px;font-weight:bold;color:var(--p_color);}
+    .Mikumark h4 {font-size:13px;line-height:23px;font-weight:bold;color:var(--p_color);}
+    .Mikumark h5 {font-size:13px;line-height:23px;font-weight:bold;color:var(--p_color);}
+    .Mikumark h6 {font-size:13px;line-height:23px;font-weight:bold;color:var(--p_color);}
 }
 
 /********** 表格样式 **********/
@@ -312,7 +286,7 @@ markdown { display: none; }
     /* 表头样式（可直接改动） */
     .Mikumark th {
         font-weight: bold;
-        background-color: #f5f5f5;
+        background-color: #f5f5f8;
     }
 }
 @media(max-width:650px) { /* Mobile */
@@ -346,7 +320,7 @@ markdown { display: none; }
     /* 表头样式（可直接改动） */
     .Mikumark th {
         font-weight: bold;
-        background-color: #f9f9f9;
+        background-color: #f5f5f8;
     }
 }
 
@@ -360,7 +334,7 @@ markdown { display: none; }
         line-height: calc(var(--p_line_height) - 2px);
         padding: 5px 10px 5px 14px;
         margin: var(--p_margin_bottom) 0;
-        border-left: 3px solid #def1ff;
+        border-left: 3px solid #18ea;
         border-radius: 5px;
         box-shadow: 0 1px 1px 0 rgba(64,64,64,0.08), 0 1px 3px 1px rgba(64,64,64,0.16);
     }
@@ -385,7 +359,7 @@ markdown { display: none; }
         line-height: calc(var(--p_line_height) - 2px);
         padding: 5px 10px 5px 14px;
         margin: var(--p_margin_bottom) 0;
-        border-left: 3px solid #99ddff;
+        border-left: 3px solid #18ea;
         border-radius: 5px;
         box-shadow: 0 1px 1px 0 rgba(64,64,64,0.08), 0 1px 3px 1px rgba(64,64,64,0.16);
     }
@@ -420,7 +394,7 @@ markdown { display: none; }
 }
 @media(max-width:650px) { /* Mobile */
     /* 超链接样式（部分可直接改动） */
-    .Mikumark a {color: #18d;text-decoration: none;}
+    .Mikumark a {color: #18e;text-decoration: none;}
     .Mikumark a:hover {color:#0066dd;text-decoration:underline;}
 }
 

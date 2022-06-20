@@ -621,6 +621,7 @@ function RenderTOC(outline) {
     // 注册目录标题的点击跳转事件
     // 跳转到某个标题
     function TurnTo(titleID) {
+        $(".TableOfContents").toggle();
         let targetTop = window.pageYOffset + $(`#Title_${titleID}`)[0].getBoundingClientRect().top;
         $('html, body').animate({ scrollTop: targetTop-40 }, 200, 'easeOutExpo', () => {
             $(window).scroll(); // 保证触发目录刷新
