@@ -29,6 +29,11 @@ markdown { display: none; }
     }
 }
 
+.Header {
+    padding: 40px 0;
+    background-image: linear-gradient(180deg, #fff0 10%, #fff),linear-gradient(90deg, #ddf4ff 30%, #ebffef);
+}
+
 .StickyTitle {
     color: #3a4b5c;
     position: sticky;
@@ -94,7 +99,8 @@ markdown { display: none; }
     cursor: pointer;
 }
 
-
+/* 目录占位项：不显示marker */
+.VirtualTocItem::marker { content: ""; }
 
 
 

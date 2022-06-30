@@ -573,6 +573,10 @@ function RenderTOC(outline) {
     let HtmlBuffer = new Array();
     HtmlBuffer.push(`<ul class="ContentsList">`);
 
+    // 在目录列表头部插入一个虚拟节点，解决 第一个目录项是二级或二级以下会导致无限循环 的问题
+    let virtualTocItemTitle = "VI_" + ((Math.random() * 100000 + 100000) | 0);
+    outline.unshift({level: 1, title: virtualTocItemTitle});
+
     // 保证标签匹配的栈
     let stack = new Array();
     stack.push('{'); // 已经有一个ul了
@@ -581,9 +585,17 @@ function RenderTOC(outline) {
         let thisLevel = outline[i].level + 1;
         let nextLevel = (outline[i+1] === undefined) ? 2 : (outline[i+1].level + 1)
         let thisTitle = outline[i].title;
+
+        let itemClass = "";
+        if(thisTitle === virtualTocItemTitle) {
+            itemClass = ` class="VirtualTocItem"`;
+            thisTitle = "";
+        }
+
         // 缩进
         if(thisLevel < nextLevel) {
-            HtmlBuffer.push(`<li><span data-title-id="${i}" id="ContentsItem_${i}" class="ContentsItem">${thisTitle}</span>`);
+            // 由于outline列表前面插入了占位项，所以以下所有下标都减1
+            HtmlBuffer.push(`<li${itemClass}><span data-title-id="${i-1}" id="ContentsItem_${i-1}" class="ContentsItem">${thisTitle}</span>`);
             stack.push('(');
             for(let c = 0; c < nextLevel - thisLevel; c++) {
                 HtmlBuffer.push(`<ul class="ContentsListItem">`);
@@ -592,7 +604,7 @@ function RenderTOC(outline) {
         }
         // 退出缩进
         else if(thisLevel > nextLevel) {
-            HtmlBuffer.push(`<li><span data-title-id="${i}" id="ContentsItem_${i}" class="ContentsItem">${thisTitle}</span>`);
+            HtmlBuffer.push(`<li${itemClass}><span data-title-id="${i-1}" id="ContentsItem_${i-1}" class="ContentsItem">${thisTitle}</span>`);
             stack.push('(');
             let count = thisLevel - nextLevel;
             while(count >= 0) {
@@ -611,7 +623,9 @@ function RenderTOC(outline) {
         }
         // 平级
         else {
-            HtmlBuffer.push(`<li><span data-title-id="${i}" id="ContentsItem_${i}" class="ContentsItem">${thisTitle}</span></li>`);
+            if(i > 0) { // 占位项不处理
+                HtmlBuffer.push(`<li${itemClass}><span data-title-id="${i-1}" id="ContentsItem_${i-1}" class="ContentsItem">${thisTitle}</span></li>`);
+            }
         }
     }
     HtmlBuffer.push('</ul>');

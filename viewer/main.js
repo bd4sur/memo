@@ -28,3 +28,9 @@ $("#TocToggle").click(() => { $(".TableOfContents").slideToggle(100); });
 
 showMarkdown(MARKDOWN_TAGS[0]);
 goTop();
+
+let headerContent = `
+<div style="text-align: center; font-size: 18px; font-weight: lighter; line-height: 2;">Amateur Radio Station</div>
+<div style="text-align: center; font-size: 24px; font-weight: bold;">BD4SUR</div>
+`;
+$("#Header").html(headerContent);
